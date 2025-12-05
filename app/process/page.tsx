@@ -1,38 +1,28 @@
 "use client";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 
-import { useEffect, useState } from "react";
-
-export default function Process() {
-  const [status, setStatus] = useState("Video işleniyor...");
+export default function ProcessPage() {
+  const router = useRouter();
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setStatus("Kare çıkarma başlıyor...");
-    }, 2000);
+    const run = async () => {
+      const res = await fetch("/api/process", { method: "POST" });
+      const data = await res.json();
 
-    const timer2 = setTimeout(() => {
-      setStatus("Kareler OCR için hazırlanıyor...");
-    }, 5000);
-
-    const timer3 = setTimeout(() => {
-      setStatus("Rapor hazırlanıyor...");
-    }, 8000);
-
-    const timer4 = setTimeout(() => {
-      setStatus("Bitti ✔ Rapor hazırlanıyor...");
-      window.location.href = "/"; // burası rapor sayfası olacak
-    }, 12000);
-
-    return () => {
-      clearTimeout(timer);
-      clearTimeout(timer2);
-      clearTimeout(timer3);
-      clearTimeout(timer4);
+      if (data?.followers) {
+        localStorage.setItem("followers", JSON.stringify(data.followers));
+        router.push("/result");
+      } else {
+        alert("Bir hata oluştu, tekrar deneyin.");
+      }
     };
+
+    run();
   }, []);
 
   return (
-    <main
+    <div
       style={{
         display: "flex",
         flexDirection: "column",
@@ -43,15 +33,15 @@ export default function Process() {
         textAlign: "center"
       }}
     >
-      <h1 style={{ fontSize: "2.3rem", fontWeight: 600 }}>
+      <h1 style={{ fontSize: "3rem", fontWeight: 700 }}>
         Video İşleniyor 🔍
       </h1>
-
-      <p style={{ marginTop: "25px", fontSize: "1.2rem" }}>{status}</p>
-
-      <p style={{ marginTop: "40px", opacity: 0.6 }}>
-        Sayfayı kapatmayın. İşlem tamamlanınca otomatik yönlendirme olacaktır.
+      <p style={{ fontSize: "1.2rem", maxWidth: "650px" }}>
+        Lütfen bekleyin. Takipçi listeniz videodan okunuyor.
       </p>
-    </main>
+      <p style={{ opacity: 0.6, marginTop: "50px" }}>
+        📌 Sayfayı kapatmayın, işlem bitince otomatik rapora yönlendirileceksiniz.
+      </p>
+    </div>
   );
 }
