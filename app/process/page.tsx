@@ -6,23 +6,20 @@ export default function ProcessPage() {
   const router = useRouter();
 
   useEffect(() => {
-    const run = async () => {
+    const handle = async () => {
       const res = await fetch("/api/process", { method: "POST" });
       const data = await res.json();
 
-      if (data?.followers) {
-        localStorage.setItem("followers", JSON.stringify(data.followers));
-        router.push("/result");
-      } else {
-        alert("Bir hata oluştu, tekrar deneyin.");
+      if (data?.redirect) {
+        router.push(data.redirect);
       }
     };
 
-    run();
-  }, []);
+    handle();
+  }, [router]);
 
   return (
-    <div
+    <main
       style={{
         display: "flex",
         flexDirection: "column",
@@ -30,18 +27,17 @@ export default function ProcessPage() {
         alignItems: "center",
         minHeight: "100vh",
         fontFamily: "sans-serif",
-        textAlign: "center"
+        textAlign: "center",
       }}
     >
-      <h1 style={{ fontSize: "3rem", fontWeight: 700 }}>
-        Video İşleniyor 🔍
-      </h1>
-      <p style={{ fontSize: "1.2rem", maxWidth: "650px" }}>
-        Lütfen bekleyin. Takipçi listeniz videodan okunuyor.
+      <h1 style={{ fontSize: "3rem" }}>Video İşleniyor 🔍</h1>
+      <p style={{ fontSize: "1.2rem", maxWidth: "600px", marginTop: "10px" }}>
+        Lütfen bekleyin, takipçi listeniz analiz ediliyor...
       </p>
-      <p style={{ opacity: 0.6, marginTop: "50px" }}>
-        📌 Sayfayı kapatmayın, işlem bitince otomatik rapora yönlendirileceksiniz.
+      <span style={{ fontSize: "3rem", marginTop: "30px" }}>⏳</span>
+      <p style={{ marginTop: "80px", fontSize: "1rem", opacity: 0.6 }}>
+        Bu işlem birkaç saniye sürebilir, sayfayı kapatmayın.
       </p>
-    </div>
+    </main>
   );
 }
