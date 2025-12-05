@@ -93,40 +93,37 @@ export default function UploadPage() {
       )}
 
       {/* Upload Button */}
-      <button
-        style={{
-          marginTop: "25px",
-          background: "#000",
-          color: "#fff",
-          padding: "14px 28px",
-          borderRadius: "8px",
-          fontSize: "1rem",
-          cursor: "pointer"
-        }}
-        onClick={async () => {
-          if (!selectedVideo) {
-            alert("Lütfen önce bir video seçin.");
-            return;
-          }
+     {selectedVideo && (
+  <button
+    onClick={async () => {
+      if (!selectedVideo) return alert("Video seçilmedi.");
 
-          const formData = new FormData();
-          formData.append("file", selectedVideo);
+      const formData = new FormData();
+      formData.append("video", selectedVideo);
 
-          try {
-            const res = await fetch("/api/upload", {
-              method: "POST",
-              body: formData,
-            });
+      // 1) Kullanıcıyı işlem ekranına gönder
+      window.location.href = "/process";
 
-            const data = await res.json();
+      // 2) Arka planda video API’ye gönderilsin
+      fetch("/api/process", {
+        method: "POST",
+        body: formData,
+      }).catch(() => alert("Video yüklemede hata oluştu"));
+    }}
+    style={{
+      marginTop: "25px",
+      background: "#000",
+      color: "#fff",
+      padding: "14px 28px",
+      borderRadius: "8px",
+      fontSize: "1rem",
+      cursor: "pointer"
+    }}
+  >
+    Analizi Başlat
+  </button>
+)}
 
-            alert("Video başarıyla yüklendi: " + data.fileName);
-          } catch (error) {
-            console.error(error);
-            alert("Yükleme sırasında bir hata oluştu.");
-          }
-        }}
-      >
         Analizi Başlat
       </button>
 
