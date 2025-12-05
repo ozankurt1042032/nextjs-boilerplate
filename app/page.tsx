@@ -1,4 +1,12 @@
+"use client";
+
 export default function Home() {
+  const handleStart = () => {
+    const done = typeof window !== "undefined" && localStorage.getItem("tutorialDone");
+    if (done) window.location.href = "/upload";
+    else window.location.href = "/tutorial";
+  };
+
   return (
     <main
       style={{
@@ -21,6 +29,7 @@ export default function Home() {
       </p>
 
       <button
+        onClick={handleStart}
         style={{
           marginTop: "30px",
           background: "#000",
@@ -33,6 +42,18 @@ export default function Home() {
       >
         Analizi Başlat
       </button>
+
+      <p
+        style={{
+          marginTop: "15px",
+          opacity: 0.7,
+          fontSize: "0.9rem",
+          cursor: "pointer"
+        }}
+        onClick={() => window.location.href = "/tutorial"}
+      >
+        Rehberi tekrar göster
+      </p>
 
       <footer style={{ marginTop: "80px", fontSize: "0.9rem", opacity: 0.6 }}>
         © 2025 Takipçi Analizi
