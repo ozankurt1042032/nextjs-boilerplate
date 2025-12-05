@@ -1,94 +1,101 @@
 "use client";
-
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function UploadPage() {
-  const [video, setVideo] = useState<File | null>(null);
+  const [file, setFile] = useState<File | null>(null);
+  const [selectedName, setSelectedName] = useState("");
+  const router = useRouter();
+
+  const handleFile = (e: any) => {
+    const f = e.target.files[0];
+    setFile(f);
+    setSelectedName(f?.name || "");
+  };
+
+  const handleUpload = async () => {
+    if (!file) return alert("Lütfen bir video seçin");
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    // Videoyu backend'e yükleme işlemi
+    const uploadRes = await fetch("/api/upload", {
+      method: "POST",
+      body: formData,
+    });
+
+    const result = await uploadRes.json();
+
+    if (result?.message === "ok") {
+      // Videoyu yükledikten sonra otomatik işlem sayfasına geç
+      router.push("/process");
+    } else {
+      alert("Video yüklenirken hata oluştu. Tekrar deneyin.");
+    }
+  };
 
   return (
     <main
       style={{
         display: "flex",
         flexDirection: "column",
-        justifyContent: "center",
         alignItems: "center",
-        minHeight: "100vh",
+        padding: "60px",
         fontFamily: "sans-serif",
-        textAlign: "center",
-        padding: "20px"
       }}
     >
-      <h1 style={{ fontSize: "2.4rem", fontWeight: 700 }}>
+      <h1 style={{ fontSize: "2.5rem", marginBottom: "20px" }}>
         Instagram Ekran Kaydı Yükle
       </h1>
 
-      <p style={{ fontSize: "1rem", maxWidth: "600px", opacity: 0.8 }}>
-        Takipçi ekranının kayıt videosunu yükleyin.
+      <p style={{ maxWidth: "650px", fontSize: "1.1rem", lineHeight: "1.6" }}>
+        Aşağıdaki adımları takip ederek takipçi listenizin ekran kaydını yükleyin.
       </p>
 
       <label
-        htmlFor="videoUpload"
+        htmlFor="video"
         style={{
-          marginTop: "25px",
+          marginTop: "40px",
           background: "#000",
           color: "#fff",
-          padding: "14px 28px",
+          padding: "14px 30px",
           borderRadius: "8px",
-          cursor: "pointer"
+          cursor: "pointer",
+          fontSize: "1rem",
         }}
       >
-        📁 Ekran Kaydını Seç
+        Ekran Kaydını Seç
       </label>
 
       <input
-        id="videoUpload"
+        id="video"
         type="file"
         accept="video/*"
-        onChange={(e) => setVideo(e.target.files?.[0] || null)}
+        onChange={handleFile}
         style={{ display: "none" }}
       />
 
-      {video && (
-        <p
-          style={{
-            marginTop: "14px",
-            fontSize: "1rem",
-            padding: "10px 18px",
-            background: "#f7f7f7",
-            borderRadius: "10px",
-            border: "1px solid #ddd",
-            width: "fit-content"
-          }}
-        >
-          📌 Seçilen video: <b>{video.name}</b>
+      {selectedName && (
+        <p style={{ marginTop: "15px", color: "green", fontWeight: 500 }}>
+          Seçilen video: {selectedName}
         </p>
       )}
 
-      {video && (
-        <button
-          style={{
-            marginTop: "25px",
-            background: "#000",
-            color: "#fff",
-            padding: "14px 28px",
-            borderRadius: "8px",
-            cursor: "pointer"
-          }}
-          onClick={async () => {
-            const formData = new FormData();
-            formData.append("video", video as Blob);
-
-            await fetch("/api/process", {
-              method: "POST",
-              body: formData
-            });
-
-            window.location.href = "/process";
-          }}
-        >
-          Analizi Başlat
-        </button>
-      )}
+      <button
+        onClick={handleUpload}
+        style={{
+          marginTop: "30px",
+          background: "#1a73e8",
+          color: "#fff",
+          padding: "14px 28px",
+          borderRadius: "8px",
+          fontSize: "1rem",
+          cursor: "pointer",
+        }}
+      >
+        Videoyu Yükle ve İşlemeye Başla
+      </button>
     </main>
   );
 }
