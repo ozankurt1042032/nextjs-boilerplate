@@ -3,7 +3,26 @@
 import { useState } from "react";
 
 export default function UploadPage() {
-  const [selectedVideo, setSelectedVideo] = useState<File | null>(null);
+  const [video, setVideo] = useState<File | null>(null);
+
+  const handleAnalyze = async () => {
+    if (!video) {
+      alert("Lütfen önce video seçin");
+      return;
+    }
+
+    // önce kullanıcıyı /process sayfasına yönlendir
+    window.location.href = "/process";
+
+    // backend'e arka planda gönderim
+    const formData = new FormData();
+    formData.append("video", video);
+
+    fetch("/api/process", {
+      method: "POST",
+      body: formData,
+    }).catch(() => console.log("Arka plan yükleme hatası"));
+  };
 
   return (
     <main
@@ -15,7 +34,6 @@ export default function UploadPage() {
         minHeight: "100vh",
         fontFamily: "sans-serif",
         textAlign: "center",
-        padding: "20px"
       }}
     >
       <h1 style={{ fontSize: "2.4rem", fontWeight: 700 }}>
@@ -23,119 +41,67 @@ export default function UploadPage() {
       </h1>
 
       <p style={{ fontSize: "1.1rem", maxWidth: "650px", marginTop: "10px" }}>
-        Aşağıdaki adımları takip ederek Instagram takipçi listenizin ekran
-        kaydını alın ve videoyu buraya yükleyin. Şimdilik sadece videoyu alıp adını
-        göstereceğiz. Bir sonraki adımda bu videodan takipçi listesini okuyup analiz kısmını
-        ekleyeceğiz.
+        Instagram takipçi ekranını kaydedip buraya yükleyin.
       </p>
 
-      <div style={{ textAlign: "left", maxWidth: "650px", marginTop: "20px" }}>
-        <p>📌 Telefonunuzdan Instagram uygulamasını açın.</p>
-        <p>📌 Profilinize girip <b>Takipçiler</b> ekranına gelin.</p>
-        <p>📌 Telefonunuzun bildirim merkezinden <b>ekran kaydını başlatın.</b></p>
-        <p>
-          📌 Takipçi listesini <b>yavaşça aşağı kaydırın</b>. Çok hızlı kaydırmayın,
-          isimler okunamayabilir.
-        </p>
-        <p>
-          📌 Listenin sonuna geldiğinizde kaydı durdurup videoyu galerinize kaydedin.
-        </p>
-        <p>📌 Aşağıdaki alandan bu videoyu yükleyin.</p>
-      </div>
-
-      {/* Video seçme alanı */}
+      {/* BUTON GÖRÜNÜMÜ OLAN SEÇME */}
       <label
-  htmlFor="videoUpload"
-  style={{
-    marginTop: "30px",
-    background: "#000",
-    color: "#fff",
-    padding: "14px 28px",
-    borderRadius: "8px",
-    fontSize: "1rem",
-    cursor: "pointer",
-    display: "inline-block"
-  }}
->
-  📁 Ekran Kaydını Seç
-</label>
+        htmlFor="videoUpload"
+        style={{
+          marginTop: "30px",
+          background: "#000",
+          color: "#fff",
+          padding: "14px 28px",
+          borderRadius: "8px",
+          fontSize: "1rem",
+          cursor: "pointer",
+        }}
+      >
+        📁 Ekran Kaydını Seç
+      </label>
 
-<input
-  id="videoUpload"
-  type="file"
-  accept="video/*"
-  onChange={(e) => setSelectedVideo(e.target.files?.[0] || null)}
-  style={{ display: "none" }}
-/>
-{selectedVideo && (
-  <p
-    style={{
-      marginTop: "14px",
-      fontSize: "1rem",
-      padding: "10px 18px",
-      background: "#f7f7f7",
-      borderRadius: "10px",
-      border: "1px solid #ddd",
-      width: "fit-content",
-      color: "#333"
-    }}
-  >
-    📌 Seçilen video: <b>{selectedVideo.name}</b>
-  </p>
-)}
+      <input
+        id="videoUpload"
+        type="file"
+        accept="video/*"
+        onChange={(e) => setVideo(e.target.files?.[0] || null)}
+        style={{ display: "none" }}
+      />
 
-
-      {/* Seçilen video adı */}
-      {selectedVideo && (
-        <p style={{ marginTop: "15px", fontSize: "1rem", fontWeight: 600 }}>
-          Seçilen video: {selectedVideo.name}
+      {/* SEÇİLEN VİDEO GÖSTERİMİ */}
+      {video && (
+        <p
+          style={{
+            marginTop: "14px",
+            fontSize: "1rem",
+            padding: "10px 18px",
+            background: "#f7f7f7",
+            borderRadius: "10px",
+            border: "1px solid #ddd",
+            width: "fit-content",
+          }}
+        >
+          📌 Seçilen video: <b>{video.name}</b>
         </p>
       )}
 
-      {/* Upload Button */}
-     {selectedVideo && (
-  <button
-    onClick={async () => {
-      if (!selectedVideo) return alert("Video seçilmedi.");
-
-      const formData = new FormData();
-      formData.append("video", selectedVideo);
-
-      // 1) Kullanıcıyı işlem ekranına gönder
-      window.location.href = "/process";
-
-      // 2) Arka planda video API’ye gönderilsin
-      fetch("/api/process", {
-        method: "POST",
-        body: formData,
-      }).catch(() => alert("Video yüklemede hata oluştu"));
-    }}
-    style={{
-      marginTop: "25px",
-      background: "#000",
-      color: "#fff",
-      padding: "14px 28px",
-      borderRadius: "8px",
-      fontSize: "1rem",
-      cursor: "pointer"
-    }}
-  >
-    Analizi Başlat
-  </button>
-)}
-
-        Analizi Başlat
-      </button>
-
-      <footer
-        style={{
-          marginTop: "60px",
-          fontSize: "0.9rem",
-          opacity: 0.6
-        }}
-      >
-        © 2025 Takipçi Analizi
-      </footer>
+      {/* ANALİZ TUŞU */}
+      {video && (
+        <button
+          onClick={handleAnalyze}
+          style={{
+            marginTop: "25px",
+            background: "#000",
+            color: "#fff",
+            padding: "14px 28px",
+            borderRadius: "8px",
+            fontSize: "1rem",
+            cursor: "pointer",
+          }}
+        >
+          Analizi Başlat
+        </button>
+      )}
     </main>
   );
 }
