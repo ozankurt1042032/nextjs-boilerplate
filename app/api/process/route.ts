@@ -30,12 +30,14 @@ export async function POST() {
     ];
 
     return NextResponse.json(
-      {
-        message: "ok",
-        followers: fakeFollowers
-      },
-      { status: 200 }
-    );
+  {
+    done: true,
+    redirect: "/report",
+    followers: fakeFollowers
+  },
+  { status: 200 }
+);
+
   } catch (e) {
     console.log("Hata process:", e);
     return NextResponse.json({ error: "İşlem hatası" }, { status: 500 });
