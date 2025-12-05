@@ -2,42 +2,49 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 
-export default function ProcessPage() {
+export default function Process() {
   const router = useRouter();
 
   useEffect(() => {
-    const handle = async () => {
-      const res = await fetch("/api/process", { method: "POST" });
-      const data = await res.json();
+    const run = async () => {
+      console.log("process tetiklendi");
+
+      const res = await fetch("/api/process", {
+        method: "POST",
+        cache: "no-store",
+      }).catch((e) => console.log("fetch error", e));
+
+      console.log("process yanıt:", res);
+
+      if (!res) {
+        alert("API tetiklenmedi!");
+        return;
+      }
+
+      const data = await res.json().catch((e) => console.log("json error", e));
+
+      console.log("data:", data);
 
       if (data?.redirect) {
         router.push(data.redirect);
+      } else {
+        alert("Redirect gelmedi, API dönmüyor!");
       }
     };
 
-    handle();
-  }, [router]);
+    run();
+  }, []);
 
   return (
-    <main
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        justifyContent: "center",
-        alignItems: "center",
-        minHeight: "100vh",
-        fontFamily: "sans-serif",
-        textAlign: "center",
-      }}
-    >
-      <h1 style={{ fontSize: "3rem" }}>Video İşleniyor 🔍</h1>
-      <p style={{ fontSize: "1.2rem", maxWidth: "600px", marginTop: "10px" }}>
-        Lütfen bekleyin, takipçi listeniz analiz ediliyor...
-      </p>
-      <span style={{ fontSize: "3rem", marginTop: "30px" }}>⏳</span>
-      <p style={{ marginTop: "80px", fontSize: "1rem", opacity: 0.6 }}>
-        Bu işlem birkaç saniye sürebilir, sayfayı kapatmayın.
-      </p>
+    <main style={{
+      display: "flex",
+      flexDirection: "column",
+      justifyContent: "center",
+      alignItems: "center",
+      minHeight: "100vh"
+    }}>
+      <h1>İşlem Başlatılıyor...</h1>
+      <p>Lütfen bekleyin</p>
     </main>
   );
 }
