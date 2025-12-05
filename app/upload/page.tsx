@@ -44,12 +44,46 @@ export default function UploadPage() {
       </div>
 
       {/* Video seçme alanı */}
-      <input
-        type="file"
-        accept="video/*"
-        onChange={(e) => setSelectedVideo(e.target.files?.[0] || null)}
-        style={{ marginTop: "30px" }}
-      />
+      <label
+  htmlFor="videoUpload"
+  style={{
+    marginTop: "30px",
+    background: "#000",
+    color: "#fff",
+    padding: "14px 28px",
+    borderRadius: "8px",
+    fontSize: "1rem",
+    cursor: "pointer",
+    display: "inline-block"
+  }}
+>
+  📁 Ekran Kaydını Seç
+</label>
+
+<input
+  id="videoUpload"
+  type="file"
+  accept="video/*"
+  onChange={(e) => setSelectedVideo(e.target.files?.[0] || null)}
+  style={{ display: "none" }}
+/>
+{selectedVideo && (
+  <p
+    style={{
+      marginTop: "14px",
+      fontSize: "1rem",
+      padding: "10px 18px",
+      background: "#f7f7f7",
+      borderRadius: "10px",
+      border: "1px solid #ddd",
+      width: "fit-content",
+      color: "#333"
+    }}
+  >
+    📌 Seçilen video: <b>{selectedVideo.name}</b>
+  </p>
+)}
+
 
       {/* Seçilen video adı */}
       {selectedVideo && (
