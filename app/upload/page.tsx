@@ -3,40 +3,108 @@
 import { useState } from "react";
 
 export default function UploadPage() {
-  const [video, setVideo] = useState<File | null>(null);
-
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      setVideo(file);
-    }
-  };
-
-  const handleAnalyze = async () => {
-    if (!video) return alert("Lütfen video seçin.");
-
-    const formData = new FormData();
-    formData.append("video", video);
-
-    const res = await fetch("/api/process", {
-      method: "POST",
-      body: formData,
-    });
-
-    const data = await res.json();
-    alert("Sonuç: " + data.message);
-  };
+  const [selectedVideo, setSelectedVideo] = useState<File | null>(null);
 
   return (
     <main
       style={{
-        minHeight: "100vh",
         display: "flex",
         flexDirection: "column",
+        justifyContent: "center",
         alignItems: "center",
-        padding: "30px 20px",
+        minHeight: "100vh",
         fontFamily: "sans-serif",
         textAlign: "center",
+        padding: "20px"
       }}
     >
-      <h1 style={{ fontSize: "2
+      <h1 style={{ fontSize: "2.4rem", fontWeight: 700 }}>
+        Instagram Ekran Kaydı Yükle
+      </h1>
+
+      <p style={{ fontSize: "1.1rem", maxWidth: "650px", marginTop: "10px" }}>
+        Aşağıdaki adımları takip ederek Instagram takipçi listenizin ekran
+        kaydını alın ve videoyu buraya yükleyin. Şimdilik sadece videoyu alıp adını
+        göstereceğiz. Bir sonraki adımda bu videodan takipçi listesini okuyup analiz kısmını
+        ekleyeceğiz.
+      </p>
+
+      <div style={{ textAlign: "left", maxWidth: "650px", marginTop: "20px" }}>
+        <p>📌 Telefonunuzdan Instagram uygulamasını açın.</p>
+        <p>📌 Profilinize girip <b>Takipçiler</b> ekranına gelin.</p>
+        <p>📌 Telefonunuzun bildirim merkezinden <b>ekran kaydını başlatın.</b></p>
+        <p>
+          📌 Takipçi listesini <b>yavaşça aşağı kaydırın</b>. Çok hızlı kaydırmayın,
+          isimler okunamayabilir.
+        </p>
+        <p>
+          📌 Listenin sonuna geldiğinizde kaydı durdurup videoyu galerinize kaydedin.
+        </p>
+        <p>📌 Aşağıdaki alandan bu videoyu yükleyin.</p>
+      </div>
+
+      {/* Video seçme alanı */}
+      <input
+        type="file"
+        accept="video/*"
+        onChange={(e) => setSelectedVideo(e.target.files?.[0] || null)}
+        style={{ marginTop: "30px" }}
+      />
+
+      {/* Seçilen video adı */}
+      {selectedVideo && (
+        <p style={{ marginTop: "15px", fontSize: "1rem", fontWeight: 600 }}>
+          Seçilen video: {selectedVideo.name}
+        </p>
+      )}
+
+      {/* Upload Button */}
+      <button
+        style={{
+          marginTop: "25px",
+          background: "#000",
+          color: "#fff",
+          padding: "14px 28px",
+          borderRadius: "8px",
+          fontSize: "1rem",
+          cursor: "pointer"
+        }}
+        onClick={async () => {
+          if (!selectedVideo) {
+            alert("Lütfen önce bir video seçin.");
+            return;
+          }
+
+          const formData = new FormData();
+          formData.append("file", selectedVideo);
+
+          try {
+            const res = await fetch("/api/upload", {
+              method: "POST",
+              body: formData,
+            });
+
+            const data = await res.json();
+
+            alert("Video başarıyla yüklendi: " + data.fileName);
+          } catch (error) {
+            console.error(error);
+            alert("Yükleme sırasında bir hata oluştu.");
+          }
+        }}
+      >
+        Analizi Başlat
+      </button>
+
+      <footer
+        style={{
+          marginTop: "60px",
+          fontSize: "0.9rem",
+          opacity: 0.6
+        }}
+      >
+        © 2025 Takipçi Analizi
+      </footer>
+    </main>
+  );
+}
