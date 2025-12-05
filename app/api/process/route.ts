@@ -1,29 +1,43 @@
 import { NextResponse } from "next/server";
-import { writeFile } from "fs/promises";
 import path from "path";
+import fs from "fs";
 
-export async function POST(req: Request) {
+export async function POST() {
   try {
-    const formData = await req.formData();
-    const video = formData.get("video") as File;
+    const uploadsDir = path.join(process.cwd(), "public", "uploads");
+
+    // Yüklenmiş video burada duruyor mu kontrol et
+    const files = fs.readdirSync(uploadsDir);
+    const video = files.find((f) => f.endsWith(".mp4"));
 
     if (!video) {
-      return NextResponse.json({ error: "Video yok" }, { status: 400 });
+      return NextResponse.json({ error: "Video bulunamadı" }, { status: 400 });
     }
 
-    const bytes = await video.arrayBuffer();
-    const buffer = Buffer.from(bytes);
-    const filePath = path.join(process.cwd(), "public", "upload.mp4");
+    console.log("İşlem başlıyor →", video);
 
-    await writeFile(filePath, buffer);
+    // *** Şimdilik SADECE DEMO simülasyonu ***
+    // Buraya asıl kare okuma, OCR, takipçi ayıklama eklenecek
+    await new Promise((resolve) => setTimeout(resolve, 3000));
 
-    return NextResponse.json({
-      status: "ok",
-      message: "Video sunucuya kaydedildi ✔",
-      filePath: "/upload.mp4"
-    });
+    // DEMO ÇIKTI – şimdilik örnek isim listesi verelim
+    const fakeFollowers = [
+      "mehmet_123",
+      "ayse.kara",
+      "dogukan.dev",
+      "elif_xx",
+      "mert.gunay"
+    ];
+
+    return NextResponse.json(
+      {
+        message: "ok",
+        followers: fakeFollowers
+      },
+      { status: 200 }
+    );
   } catch (e) {
-    console.error(e);
+    console.log("Hata process:", e);
     return NextResponse.json({ error: "İşlem hatası" }, { status: 500 });
   }
 }
