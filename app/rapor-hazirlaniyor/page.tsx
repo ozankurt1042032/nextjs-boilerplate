@@ -1,7 +1,16 @@
-export default function Rapor() {
+export default function RaporHazirlaniyor() {
   return (
-    <h1 style={{textAlign:"center", marginTop:"150px"}}>
-      ✔ İşlem Tamamlandı<br/>Rapor Hazırlanıyor...
-    </h1>
+    <main style={{
+      display: "flex",
+      flexDirection: "column",
+      justifyContent: "center",
+      alignItems: "center",
+      minHeight: "100vh",
+      fontSize: "2rem"
+    }}>
+      ✔ İşlem Tamamlandı<br/>
+      Rapor Hazırlanıyor...
+    </main>
   );
 }
+
