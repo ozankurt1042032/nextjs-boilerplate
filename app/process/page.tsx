@@ -1,50 +1,92 @@
+// app/process/page.tsx
 "use client";
-import { useEffect } from "react";
+
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
-export default function Process() {
+export default function ProcessPage() {
   const router = useRouter();
+  const [message, setMessage] = useState("İşlem başlatılıyor...");
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const run = async () => {
-      console.log("process tetiklendi");
+      try {
+        setMessage("Video işleniyor, lütfen bekleyin...");
 
-      const res = await fetch("/api/process", {
-        method: "POST",
-        cache: "no-store",
-      }).catch((e) => console.log("fetch error", e));
+        const res = await fetch("/api/process", {
+          method: "POST",
+          cache: "no-store",
+        });
 
-      console.log("process yanıt:", res);
+        if (!res.ok) {
+          throw new Error("API hata kodu: " + res.status);
+        }
 
-      if (!res) {
-        alert("API tetiklenmedi!");
-        return;
-      }
+        const data = await res.json();
 
-      const data = await res.json().catch((e) => console.log("json error", e));
-
-      console.log("data:", data);
-
-      if (data?.redirect) {
-        router.push(data.redirect);
-      } else {
-        alert("Redirect gelmedi, API dönmüyor!");
+        if (data?.redirect) {
+          setMessage("Takipçi listesi işleme alındı, yönlendiriliyorsunuz...");
+          router.push(data.redirect);
+        } else {
+          setError("API'den yönlendirme bilgisi gelmedi.");
+        }
+      } catch (e: any) {
+        console.error("PROCESS HATASI:", e);
+        setError("İşlem sırasında bir hata oluştu. Lütfen daha sonra tekrar deneyin.");
       }
     };
 
     run();
-  }, []);
+  }, [router]);
 
   return (
-    <main style={{
-      display: "flex",
-      flexDirection: "column",
-      justifyContent: "center",
-      alignItems: "center",
-      minHeight: "100vh"
-    }}>
-      <h1>İşlem Başlatılıyor...</h1>
-      <p>Lütfen bekleyin</p>
+    <main
+      style={{
+        minHeight: "100vh",
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "center",
+        alignItems: "center",
+        fontFamily: "sans-serif",
+        textAlign: "center",
+        padding: "20px",
+      }}
+    >
+      <h1 style={{ fontSize: "2.2rem", marginBottom: "10px" }}>
+        Takipçi Listesi İşleniyor
+      </h1>
+
+      {!error ? (
+        <>
+          <p style={{ fontSize: "1.1rem", maxWidth: "500px", marginBottom: "20px" }}>
+            {message}
+          </p>
+          <p style={{ opacity: 0.6, fontSize: "0.95rem" }}>
+            Bu işlem ekran kaydınızın uzunluğuna göre birkaç saniye sürebilir.
+          </p>
+        </>
+      ) : (
+        <>
+          <p style={{ color: "red", fontWeight: 600, marginBottom: "10px" }}>
+            {error}
+          </p>
+          <button
+            onClick={() => router.push("/upload")}
+            style={{
+              marginTop: "10px",
+              padding: "10px 20px",
+              borderRadius: "8px",
+              border: "none",
+              background: "#000",
+              color: "#fff",
+              cursor: "pointer",
+            }}
+          >
+            Tekrar Dene
+          </button>
+        </>
+      )}
     </main>
   );
 }
