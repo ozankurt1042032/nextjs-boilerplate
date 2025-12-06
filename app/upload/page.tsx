@@ -1,3 +1,4 @@
+// app/upload/page.tsx
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -5,10 +6,11 @@ import { useRouter } from "next/navigation";
 export default function UploadPage() {
   const [file, setFile] = useState<File | null>(null);
   const [selectedName, setSelectedName] = useState("");
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
 
-  const handleFile = (e: any) => {
-    const f = e.target.files[0];
+  const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0] || null;
     setFile(f);
     setSelectedName(f?.name || "");
   };
@@ -16,22 +18,39 @@ export default function UploadPage() {
   const handleUpload = async () => {
     if (!file) return alert("Lütfen bir video seçin");
 
-    const formData = new FormData();
-    formData.append("file", file);
+    try {
+      setLoading(true);
 
-    // Videoyu backend'e yükleme işlemi
-    const uploadRes = await fetch("/api/upload", {
-      method: "POST",
-      body: formData,
-    });
+      const formData = new FormData();
+      formData.append("file", file);
 
-    const result = await uploadRes.json();
+      const uploadRes = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
 
-    if (result?.message === "ok") {
-      // Videoyu yükledikten sonra otomatik işlem sayfasına geç
-      router.push("/process");
-    } else {
-      alert("Video yüklenirken hata oluştu. Tekrar deneyin.");
+      if (!uploadRes.ok) {
+        console.error("UPLOAD STATUS:", uploadRes.status);
+        alert("Video yüklenirken hata oluştu. Lütfen tekrar deneyin.");
+        setLoading(false);
+        return;
+      }
+
+      const result = await uploadRes.json().catch((e) => {
+        console.error("JSON PARSE HATASI:", e);
+        return null;
+      });
+
+      if (result?.message === "ok") {
+        router.push("/process");
+      } else {
+        alert("Video yüklenirken hata oluştu. Tekrar deneyin.");
+      }
+    } catch (e) {
+      console.error("UPLOAD HATASI:", e);
+      alert("Beklenmeyen bir hata oluştu. Biraz sonra tekrar deneyin.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -84,17 +103,18 @@ export default function UploadPage() {
 
       <button
         onClick={handleUpload}
+        disabled={loading}
         style={{
           marginTop: "30px",
-          background: "#1a73e8",
+          background: loading ? "#777" : "#1a73e8",
           color: "#fff",
           padding: "14px 28px",
           borderRadius: "8px",
           fontSize: "1rem",
-          cursor: "pointer",
+          cursor: loading ? "not-allowed" : "pointer",
         }}
       >
-        Videoyu Yükle ve İşlemeye Başla
+        {loading ? "Yükleniyor..." : "Videoyu Yükle ve İşlemeye Başla"}
       </button>
     </main>
   );
