@@ -1,25 +1,49 @@
 "use client";
 
 import React, { useState } from "react";
+import { processArchive } from "./processArchive";
 
 export default function UploadArchivePage() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [loading, setLoading] = useState(false);
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSelectedFile(e.target.files?.[0] || null);
   };
 
-  const handleUpload = () => {
+  const handleUpload = async () => {
     if (!selectedFile) {
       alert("Lütfen Instagram arşiv ZIP dosyasını seçin.");
       return;
     }
 
-    alert("Dosya alındı, analiz için işlenecek 👌");
+    setLoading(true);
+
+    try {
+      const result = await processArchive(selectedFile);
+
+      console.log("ZIP içeriği ayrıştırıldı:", result);
+
+      alert("Arşiv başarıyla çözüldü! Analiz ekranına yönlendiriliyorsunuz...");
+
+      window.location.href = "/analysis/results?data=ok";
+    } catch (error) {
+      alert("Arşiv okunurken bir hata oluştu. ZIP formatının doğru olduğundan emin olun.");
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <main style={{ maxWidth: 600, margin: "80px auto", textAlign: "center" }}>
+    <main
+      style={{
+        maxWidth: 600,
+        margin: "80px auto",
+        textAlign: "center",
+        padding: 20,
+      }}
+    >
       <h1>Instagram Veri Arşivini Yükle</h1>
 
       <p style={{ marginTop: 10, opacity: 0.7 }}>
@@ -35,16 +59,17 @@ export default function UploadArchivePage() {
 
       <button
         onClick={handleUpload}
+        disabled={loading}
         style={{
           marginTop: 20,
           padding: "10px 20px",
           borderRadius: 6,
-          background: "black",
+          background: loading ? "#777" : "black",
           color: "white",
-          cursor: "pointer",
+          cursor: loading ? "not-allowed" : "pointer",
         }}
       >
-        Arşivi Yükle
+        {loading ? "Yükleniyor..." : "Arşivi Yükle"}
       </button>
 
       {selectedFile && (
