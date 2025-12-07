@@ -1,18 +1,8 @@
 import { NextResponse } from "next/server";
-import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 
-const r2 = new S3Client({
-  region: "auto",
-  endpoint: `https://${process.env.CLOUDFLARE_ACCOUNT_ID}.r2.cloudflarestorage.com`,
-  credentials: {
-    accessKeyId: "R2",
-    secretAccessKey: process.env.CLOUDFLARE_R2_TOKEN!,
-  },
-});
-
-export async function POST(req: Request) {
+export async function POST(request: Request) {
   try {
-    const formData = await req.formData();
+    const formData = await request.formData();
     const file = formData.get("file") as File;
 
     if (!file) {
@@ -22,23 +12,40 @@ export async function POST(req: Request) {
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
-    const fileName = `archive_${Date.now()}.zip`;
+    const R2_BUCKET = process.env.R2_BUCKET!;
+    const R2_ACCOUNT_ID = process.env.R2_ACCOUNT_ID!;
+    const R2_ACCESS_KEY = process.env.R2_ACCESS_KEY!;
+    const R2_SECRET_KEY = process.env.R2_SECRET_KEY!;
 
-    await r2.send(
-      new PutObjectCommand({
-        Bucket: process.env.CLOUDFLARE_R2_BUCKET!,
-        Key: fileName,
-        Body: buffer,
-        ContentType: "application/zip",
-      })
-    );
+    const uploadUrl = `https://${R2_BUCKET}.${R2_ACCOUNT_ID}.r2.cloudflarestorage.com/${file.name}`;
 
-    return NextResponse.json({
-      message: "Yükleme başarılı",
-      url: `${process.env.CLOUDFLARE_R2_PUBLIC_URL}/${fileName}`,
+    const upload = await fetch(uploadUrl, {
+      method: "PUT",
+      headers: {
+        "Content-Type": file.type,
+        "Content-Length": buffer.length.toString(),
+        Authorization:
+          "AWS " +
+          R2_ACCESS_KEY +
+          ":" +
+          R2_SECRET_KEY,
+      },
+      body: buffer,
     });
-  } catch (error) {
-    console.error("UPLOAD API HATASI:", error);
-    return NextResponse.json({ error: "Yükleme hatası" }, { status: 500 });
+
+    if (!upload.ok) {
+      return NextResponse.json(
+        { error: "Cloudflare R2 yükleme hatası" },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json({ success: true, url: uploadUrl });
+  } catch (err) {
+    console.error("UPLOAD ERROR:", err);
+    return NextResponse.json(
+      { error: "Yükleme sırasında sunucu hatası oluştu" },
+      { status: 500 }
+    );
   }
 }
