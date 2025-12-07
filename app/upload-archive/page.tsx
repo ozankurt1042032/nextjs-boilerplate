@@ -1,58 +1,57 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState } from "react";
 
 export default function UploadArchivePage() {
-  const [file, setFile] = useState<File | null>(null);
-  const [result, setResult] = useState<any>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
-  const handleSubmit = async () => {
-    if (!file) return alert("Dosya seçmelisin");
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSelectedFile(e.target.files?.[0] || null);
+  };
 
-    const form = new FormData();
-    form.append("archive", file);
+  const handleUpload = () => {
+    if (!selectedFile) {
+      alert("Lütfen Instagram arşiv ZIP dosyasını seçin.");
+      return;
+    }
 
-    const res = await fetch("/api/upload-archive", {
-      method: "POST",
-      body: form,
-    });
-
-    const data = await res.json();
-    setResult(data);
+    alert("Dosya alındı, analiz için işlenecek 👌");
   };
 
   return (
-    <div style={{ maxWidth: 700, margin: "40px auto" }}>
+    <main style={{ maxWidth: 600, margin: "80px auto", textAlign: "center" }}>
       <h1>Instagram Veri Arşivini Yükle</h1>
+
       <p style={{ marginTop: 10, opacity: 0.7 }}>
-        Instagram > Settings > Privacy > Download Data üzerinden indirilen ZIP dosyasını yükleyin.
+        Instagram &gt; Settings &gt; Privacy &gt; Download Data üzerinden indirilen ZIP dosyasını yükleyin.
       </p>
 
       <input
         type="file"
-        accept=".zip,.json"
-        style={{ marginTop: 20 }}
-        onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+        accept=".zip"
+        onChange={handleFileSelect}
+        style={{ marginTop: 30 }}
       />
 
       <button
-        onClick={handleSubmit}
+        onClick={handleUpload}
         style={{
           marginTop: 20,
-          padding: 10,
-          borderRadius: 8,
-          background: "#000",
-          color: "#fff",
+          padding: "10px 20px",
+          borderRadius: 6,
+          background: "black",
+          color: "white",
+          cursor: "pointer",
         }}
       >
-        Analizi Başlat
+        Arşivi Yükle
       </button>
 
-      {result && (
-        <pre style={{ marginTop: 30, padding: 20, background: "#fafafa" }}>
-          {JSON.stringify(result, null, 2)}
-        </pre>
+      {selectedFile && (
+        <p style={{ marginTop: 15, fontSize: 14, opacity: 0.8 }}>
+          Seçilen dosya: {selectedFile.name}
+        </p>
       )}
-    </div>
+    </main>
   );
 }
