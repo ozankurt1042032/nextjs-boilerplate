@@ -1,38 +1,44 @@
-// app/api/upload/route.ts
-export const runtime = "nodejs";
-
 import { NextResponse } from "next/server";
-import path from "path";
-import fs from "fs";
+import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+
+const r2 = new S3Client({
+  region: "auto",
+  endpoint: `https://${process.env.CLOUDFLARE_ACCOUNT_ID}.r2.cloudflarestorage.com`,
+  credentials: {
+    accessKeyId: "R2",
+    secretAccessKey: process.env.CLOUDFLARE_R2_TOKEN!,
+  },
+});
 
 export async function POST(req: Request) {
   try {
-    const data = await req.formData();
-    const file = data.get("file") as File | null;
+    const formData = await req.formData();
+    const file = formData.get("file") as File;
 
     if (!file) {
-      return NextResponse.json({ error: "Dosya yok" }, { status: 400 });
+      return NextResponse.json({ error: "Dosya bulunamadı" }, { status: 400 });
     }
 
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
+    const arrayBuffer = await file.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
 
-    const uploadsDir = path.join(process.cwd(), "public", "uploads");
-    if (!fs.existsSync(uploadsDir)) {
-      fs.mkdirSync(uploadsDir, { recursive: true });
-    }
+    const fileName = `archive_${Date.now()}.zip`;
 
-    const filePath = path.join(uploadsDir, "video.mp4");
-    fs.writeFileSync(filePath, buffer);
-
-    console.log("Video kaydedildi:", filePath);
-
-    return NextResponse.json({ message: "ok" });
-  } catch (e) {
-    console.error("UPLOAD API HATASI:", e);
-    return NextResponse.json(
-      { error: "Upload sırasında hata oluştu" },
-      { status: 500 }
+    await r2.send(
+      new PutObjectCommand({
+        Bucket: process.env.CLOUDFLARE_R2_BUCKET!,
+        Key: fileName,
+        Body: buffer,
+        ContentType: "application/zip",
+      })
     );
+
+    return NextResponse.json({
+      message: "Yükleme başarılı",
+      url: `${process.env.CLOUDFLARE_R2_PUBLIC_URL}/${fileName}`,
+    });
+  } catch (error) {
+    console.error("UPLOAD API HATASI:", error);
+    return NextResponse.json({ error: "Yükleme hatası" }, { status: 500 });
   }
 }
