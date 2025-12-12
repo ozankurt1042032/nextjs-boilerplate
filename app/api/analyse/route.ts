@@ -1,30 +1,36 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
-type AnalysisResult = {
-  username: string;
-  totalFollowers: number;
-  newFollowers: string[];
-  lostFollowers: string[];
-  notFollowingBack: string[];
-  youDontFollowBack: string[];
-  suspectedBots: string[];
-};
+export async function POST(req: NextRequest) {
+  try {
+    const body = await req.json();
+    const { fileKey } = body;
 
-export async function GET(req: Request) {
-  const { searchParams } = new URL(req.url);
-  const username = searchParams.get("user") || "bilinmiyor";
+    if (!fileKey) {
+      return NextResponse.json(
+        { error: "fileKey eksik" },
+        { status: 400 }
+      );
+    }
 
-  // 🔹 Burada normalde Instagram'dan veri çekilecek.
-  // Şimdilik DEMO verisi üretiyoruz ki uygulama çalışsın.
-  const fake: AnalysisResult = {
-    username,
-    totalFollowers: 1287,
-    newFollowers: ["ahmet_1907", "eliffoto", "design.by.ayse"],
-    lostFollowers: ["eski_takipci1", "deneme_hesap"],
-    notFollowingBack: ["fenomen_x", "magaza_tr", "spor_sayfasi"],
-    youDontFollowBack: ["kardesin", "iş_arkadasi"],
-    suspectedBots: ["xx_auto_follow", "free_coins_999", "insta_fast_follow"]
-  };
+    // ŞİMDİLİK SADECE LOG
+    console.log("Analiz edilecek video:", fileKey);
 
-  return NextResponse.json(fake);
+    // Buraya ileride:
+    // - video download
+    // - frame çıkarma
+    // - takipçi sayma
+    // eklenecek
+
+    return NextResponse.json({
+      success: true,
+      message: "Video analize alındı",
+      fileKey,
+    });
+  } catch (err) {
+    console.error("ANALYSE API ERROR:", err);
+    return NextResponse.json(
+      { error: "Analiz sırasında hata oluştu" },
+      { status: 500 }
+    );
+  }
 }
