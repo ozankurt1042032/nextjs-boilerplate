@@ -1,74 +1,68 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 
-export default function AnalysisResults() {
-  const [data, setData] = useState<any>(null);
+export default function ResultsPage() {
+  const params = useSearchParams();
+  const fileKey = params.get("fileKey");
+
+  const [status, setStatus] = useState("Analiz başlatılıyor...");
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const stored = localStorage.getItem("archive_data");
-    if (stored) {
+    if (!fileKey) {
+      setError("Dosya anahtarı bulunamadı");
+      return;
+    }
+
+    async function startAnalyse() {
       try {
-        setData(JSON.parse(stored));
-      } catch {
-        setData(null);
+        const res = await fetch("/api/analyse", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ fileKey }),
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          throw new Error(data.error || "Analiz başarısız");
+        }
+
+        setStatus("Analiz tamamlandı (demo)");
+      } catch (err: any) {
+        console.error(err);
+        setError("Analiz sırasında hata oluştu");
       }
     }
-  }, []);
 
-  if (!data) {
+    startAnalyse();
+  }, [fileKey]);
+
+  if (error) {
     return (
-      <main style={{ padding: 40, textAlign: "center" }}>
-        <h2>Analiz için veri bulunamadı</h2>
-        <p>Lütfen önce Instagram ZIP arşivini yükleyin.</p>
-        <a href="/upload-archive" style={{ color: "blue" }}>
-          Arşiv Yükleme Sayfasına Git
-        </a>
-      </main>
+      <div style={{ padding: 40 }}>
+        <h1>Hata</h1>
+        <p>{error}</p>
+      </div>
     );
   }
 
-  const followers = data.followers?.map((f: any) => f.string_list_data?.[0]?.value) || [];
-  const following = data.following?.map((f: any) => f.string_list_data?.[0]?.value) || [];
-
-  const notFollowBack = following.filter((acc: string) => !followers.includes(acc));
-  const removedYou = followers.filter((acc: string) => !following.includes(acc));
-
   return (
-    <main style={{ padding: 40, maxWidth: 800, margin: "0 auto" }}>
-      <h1>📊 Takipçi Analiz Sonuçları</h1>
+    <div style={{ padding: 40 }}>
+      <h1>Analiz Sonuçları</h1>
+      <p>{status}</p>
 
-      <section style={{ marginTop: 40 }}>
-        <h2>👤 Seni Takip Etmeyenler</h2>
-        <p style={{ opacity: 0.7 }}>
-          Sen onları takip ediyorsun ama onlar seni etmiyor
-        </p>
+      <hr />
 
-        {notFollowBack.length === 0 ? (
-          <p>Herkes seni geri takip ediyor 🎉</p>
-        ) : (
-          <ul>
-            {notFollowBack.map((u: string, i: number) => (
-              <li key={i}>{u}</li>
-            ))}
-          </ul>
-        )}
-      </section>
-
-      <section style={{ marginTop: 40 }}>
-        <h2>🚫 Seni Takipten Çıkanlar</h2>
-        <p style={{ opacity: 0.7 }}>Önceden takip ediyorlardı ama artık etmiyorlar</p>
-
-        {removedYou.length === 0 ? (
-          <p>Kimse seni takipten çıkmamış 🎉</p>
-        ) : (
-          <ul>
-            {removedYou.map((u: string, i: number) => (
-              <li key={i}>{u}</li>
-            ))}
-          </ul>
-        )}
-      </section>
-    </main>
+      <p>
+        <strong>Video Anahtarı:</strong>
+        <br />
+        {fileKey}
+      </p>
+    </div>
   );
 }
